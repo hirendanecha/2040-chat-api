@@ -469,7 +469,7 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.createGroups(params);
-          console.log("group", data.notification);
+          console.log("group", data.notifications);
           if (data?.notifications) {
             for (const key in data?.notifications) {
               if (Object.hasOwnProperty.call(data?.notifications, key)) {
