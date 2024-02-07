@@ -131,7 +131,7 @@ dist
 .pnp.*
 
 # db config 
-config/db.config.js
+# config/db.config.js
 
 # pachkage lock
 package-lock.json
