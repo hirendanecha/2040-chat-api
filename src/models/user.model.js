@@ -47,9 +47,8 @@ User.login = function (email, Id, result) {
             p.ChannelType,
             p.DefaultUniqueLink,
             p.UniqueLink,
-            p.AccountType,
-            cm.communityId
-     FROM users as u left join profile as p on p.UserID = u.Id AND p.AccountType in ('I','M') left join communityMembers as cm on cm.profileId = p.ID WHERE u.Email = ? OR u.Username = ? AND u.Id = ?`,
+            p.AccountType
+     FROM users as u left join profile as p on p.UserID = u.Id AND p.AccountType in ('I','M') WHERE u.Email = ? OR u.Username = ? AND u.Id = ?`,
     [email, email, Id],
     async function (err, res) {
       if (err) {
@@ -88,12 +87,6 @@ User.login = function (email, Id, result) {
           );
         } else {
           const token = await generateJwtToken(res[0]);
-          const query =
-            "select c.channelId from channelAdmins as c left join profile as p on p.ID = c.profileId where c.profileId = p.ID and p.UserID = ?;";
-          const value = [Id];
-          const channelId = await executeQuery(query, value);
-          console.log("channelId", channelId);
-          user.channelId = channelId[0]?.channelId;
           return result(null, {
             userId: user.Id,
             user: user,
@@ -206,35 +199,13 @@ User.update = function (user_id, user, result) {
 };
 
 User.delete = async function (userId, profileId) {
-  const query = "delete from comments where profileId = ?";
-  const query1 = "delete from posts where profileid = ?";
-  const query2 = "delete from communityMembers where profileId = ?";
-  const query3 = "delete from community where profileId = ?";
-  const query4 = "delete from see_first_profile where profileId = ?";
-  const query5 = "delete from unsubscribe_profiles where profileId = ?";
   const query6 = "DELETE FROM users WHERE Id = ?";
   const query7 = "DELETE FROM profile WHERE ID = ?";
   const values = [userId];
   const values1 = [profileId];
-  await executeQuery(query, values1);
-  await executeQuery(query1, values1);
-  await executeQuery(query2, values1);
-  await executeQuery(query3, values1);
-  await executeQuery(query4, values1);
-  await executeQuery(query5, values1);
   await executeQuery(query6, values);
   const data = await executeQuery(query7, values1);
   console.log(data);
-  // return true;
-  // db.query("DELETE FROM users WHERE Id = ?", [user_id], function (err, res) {
-  //   if (err) {
-  //     console.log("error", err);
-  //     result(err, null);
-  //   } else {
-  //     console.log("user deleted", res);
-  //     result(null, res);
-  //   }
-  // });
 };
 
 User.changeAccountType = function (userId, type, result) {

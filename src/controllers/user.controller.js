@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 
 const { getPagination, getCount, getPaginationData } = require("../helpers/fn");
 const { Encrypt } = require("../helpers/cryptography");
+const og = require("open-graph");
 
 exports.login = async function (req, res) {
   console.log("jkfhguysdhfgbdf");
@@ -477,4 +478,20 @@ exports.logout = function (req, res) {
   //   domain: environments.domain,
   // });
   res.end();
+};
+
+exports.getMeta = function (req, res) {
+  const url = req.body.url;
+  console.log(url);
+  if (url) {
+    og(url, function (err, meta) {
+      if (err) {
+        return utils.send500(res, err);
+      } else {
+        return res.json({
+          meta,
+        });
+      }
+    });
+  }
 };

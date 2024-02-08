@@ -98,11 +98,6 @@ Profile.FindById = async function (profileId) {
   FROM profile WHERE ID=?`;
   const values = profileId;
   const profile = await executeQuery(query, values);
-  const query1 =
-    "select c.channelId from channelAdmins as c left join profile as p on p.ID = c.profileId where c.profileId = p.ID and p.UserID = ?;";
-  const value1 = [profile[0].UserID];
-  const channelId = await executeQuery(query1, value1);
-  profile[0].channelId = channelId[0]?.channelId;
   return profile;
 };
 
@@ -185,100 +180,6 @@ Profile.deleteNotification = function (user_id, result) {
       }
     }
   );
-};
-
-Profile.groupsAndPosts = async () => {
-  const groupsResult = await executeQuery(
-    'SELECT * FROM profile WHERE AccountType = "G" AND IsDeleted = "N" AND IsActivated = "Y" ORDER BY FirstName'
-  );
-
-  const groupIds = groupsResult.map((group) => group.ID);
-
-  const postsResult = await executeQuery(
-    'SELECT * FROM posts WHERE isdeleted = "N" AND posttoprofileid IS NOT NULL AND posttype NOT IN ("CHAT", "TA") AND posttoprofileid IN (?) ORDER BY ID DESC',
-    [groupIds]
-  );
-
-  const allGroupWithPosts = postsResult
-    .map((post) => post.posttoprofileid)
-    .filter((value, index, self) => self.indexOf(value) === index);
-  const groupsWithPosts = groupsResult.filter((group) =>
-    allGroupWithPosts.includes(group.ID)
-  );
-
-  const groupedPosts = groupsWithPosts.map((group) => {
-    const groupPosts = postsResult
-      .filter((post) => post.posttoprofileid === group.ID)
-      .sort((a, b) => b.ID - a.ID)
-      .slice(0, 6);
-
-    const groupPostsInfo = groupPosts.map((post) => {
-      let firstImage = "";
-      if (post.metaimage) {
-        firstImage = post.metaimage;
-      } else if (post.imageUrl) {
-        firstImage = post.imageUrl;
-      }
-
-      return {
-        postID: post.ID || post.id,
-        postType: post.posttype,
-        sharedPostID: post.sharedpostid,
-        postToSharedDesc: post.postdescription,
-        shortDescription: post.shortdescription,
-        postToProfileID: post.posttoprofileid,
-        profileID: post.profileid,
-        title: post.textpostdesc,
-        image: firstImage,
-      };
-    });
-
-    return {
-      Id: group.ID,
-      name: group.FirstName,
-      groupUniqueLink: group.UniqueLink,
-      posts: groupPostsInfo,
-    };
-  });
-
-  return groupedPosts;
-};
-
-Profile.getGroups = async () => {
-  const groupsResult = await executeQuery(
-    'SELECT ID, UniqueLink, FirstName FROM profile WHERE AccountType = "G" AND IsDeleted = "N" AND IsActivated = "Y" ORDER BY FirstName'
-  );
-
-  return groupsResult;
-};
-
-Profile.getGroupBasicDetails = async (uniqueLink) => {
-  const groupsResult = await executeQuery(
-    'SELECT * FROM profile WHERE AccountType = "G" AND IsDeleted = "N" AND IsActivated = "Y" AND UniqueLink=? ORDER BY FirstName',
-    [uniqueLink]
-  );
-
-  return groupsResult?.[0] || {};
-};
-
-Profile.getGroupPostById = async (id, limit, offset) => {
-  let query = `SELECT * FROM posts WHERE isdeleted = "N" AND posttoprofileid IS NOT NULL AND posttype NOT IN ("CHAT", "TA") AND posttoprofileid=${id} ORDER BY ID DESC `;
-
-  if (limit > 0 && offset >= 0) {
-    query += `LIMIT ${limit} OFFSET ${offset}`;
-  }
-  const posts = await executeQuery(query);
-
-  return posts || [];
-};
-
-Profile.getGroupFileResourcesById = async (id) => {
-  const posts = await executeQuery(
-    "SELECT p.ID AS PostID, p.PostDescription, p.PostCreationDate AS UploadedOn, ph.PhotoName as FileName FROM posts AS p LEFT JOIN photos as ph on p.ID = ph.PostID WHERE isdeleted = 'N' AND  p.posttype = 'F' AND (p.ProfileID = ? OR p.PostToProfileID = ?)",
-    [id, id]
-  );
-
-  return posts || [];
 };
 
 module.exports = Profile;
