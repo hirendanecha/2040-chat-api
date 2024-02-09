@@ -68,6 +68,10 @@ exports.removeMember = async function (data) {
   return await removeMember(data);
 };
 
+exports.getRoomsIds = async function (data) {
+  return await getRoomsIds(data);
+};
+
 const getChatList = async function (params) {
   try {
     // const query = `select r.id as roomId,count(m.id) as unReadMessage ,r.profileId1 as createdBy, r.isAccepted,p.ID as profileId,p.Username,p.FirstName,p.lastName,p.ProfilePicName from chatRooms as r join profile as p on p.ID = CASE
@@ -534,10 +538,10 @@ const deleteRoom = async function (params) {
 const startCall = async function (params) {
   try {
     if (params) {
-      if (params.roomId) {
+      if (params?.roomId) {
         const data = {
           notificationToProfileId: params?.notificationToProfileId,
-          groupId: params?.groupId,
+          roomId: params?.roomId,
           notificationByProfileId: params?.notificationByProfileId,
           actionType: "VC",
           msg: "incoming call...",
@@ -595,6 +599,7 @@ const pickUpCall = async function (params) {
       const data = {
         notificationToProfileId: params?.notificationToProfileId,
         roomId: params?.roomId,
+        groupId: params?.groupId,
         notificationByProfileId: params?.notificationByProfileId,
         actionType: "SC",
         msg: "call start...",
@@ -677,6 +682,7 @@ const addMembers = async function (data) {
     const query = "insert into groupMembers set ?";
     const values = [data];
     const member = await executeQuery(query, values);
+    console.log(member.insertId);
     return member.insertId;
   } catch (error) {
     return error;
@@ -739,6 +745,20 @@ const removeMember = async function (params) {
     const member = await executeQuery(query, values);
     const group = await getGroup(params);
     return group;
+  } catch (error) {
+    return error;
+  }
+};
+
+const getRoomsIds = async function (id) {
+  try {
+    const query = `select id as roomId from chatRooms where profileId1 = ${id} or profileId2 = ${id}`;
+    const query1 = `select groupId from groupMembers where profileId = ${id}`;
+    const roomsIds = await executeQuery(query);
+    const groupsIds = await executeQuery(query1);
+
+    const chatData = { roomsIds, groupsIds };
+    return chatData;
   } catch (error) {
     return error;
   }
