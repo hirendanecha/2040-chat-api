@@ -477,7 +477,7 @@ socket.config = (server) => {
             io.to(`${params?.roomId}`).emit("notification", data);
             return cb(true);
           } else {
-            io.to(`${params?.groupId}`).emit("notification", data);
+            io.to(`${params?.notificationToProfileId}`).emit("notification", data);
             return cb(true);
           }
         }
