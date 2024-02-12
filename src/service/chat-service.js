@@ -293,10 +293,10 @@ const createNotification = async function (params) {
     let desc = `${userData[0]?.Username || userData[0]?.FirstName} ${msg}`;
 
     const data = {
-      notificationToProfileId: Number(notificationToProfileId),
+      notificationToProfileId: notificationToProfileId || null,
       roomId: roomId || null,
       groupId: groupId || null,
-      notificationByProfileId: Number(notificationByProfileId),
+      notificationByProfileId: notificationByProfileId || null,
       actionType: actionType,
       notificationDesc: desc,
     };
@@ -540,9 +540,9 @@ const startCall = async function (params) {
     if (params) {
       if (params?.roomId) {
         const data = {
-          notificationToProfileId: params?.notificationToProfileId,
+          notificationToProfileId: params?.notificationToProfileId || null,
           roomId: params?.roomId,
-          notificationByProfileId: params?.notificationByProfileId,
+          notificationByProfileId: params?.notificationByProfileId || null,
           actionType: "VC",
           msg: "incoming call...",
         };
@@ -555,9 +555,9 @@ const startCall = async function (params) {
         return { notification };
       } else {
         const data = {
-          notificationToProfileId: params?.notificationToProfileId,
+          notificationToProfileId: params?.notificationToProfileId || null,
           groupId: params?.groupId,
-          notificationByProfileId: params?.notificationByProfileId,
+          notificationByProfileId: params?.notificationByProfileId || null,
           actionType: "VC",
           msg: "incoming call...",
         };
@@ -579,9 +579,9 @@ const declineCall = async function (params) {
   try {
     if (params) {
       const data = {
-        notificationToProfileId: params?.notificationToProfileId,
+        notificationToProfileId: params?.notificationToProfileId || null,
         roomId: params?.roomId,
-        notificationByProfileId: params?.notificationByProfileId,
+        notificationByProfileId: params?.notificationByProfileId || null,
         actionType: "DC",
         msg: "Decline call..",
       };
@@ -597,10 +597,10 @@ const pickUpCall = async function (params) {
   try {
     if (params) {
       const data = {
-        notificationToProfileId: params?.notificationToProfileId,
+        notificationToProfileId: params?.notificationToProfileId || null,
         roomId: params?.roomId,
         groupId: params?.groupId,
-        notificationByProfileId: params?.notificationByProfileId,
+        notificationByProfileId: params?.notificationByProfileId || null,
         actionType: "SC",
         msg: "call start...",
       };

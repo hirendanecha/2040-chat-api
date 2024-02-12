@@ -15,6 +15,10 @@ const environment = {
   X_CMC_PRO_API_KEY: process.env.X_CMC_PRO_API_KEY,
   EncryptionKey: process.env.EncryptionKey,
   domain: process.env.DOMAIN,
+  DB_HOST: process.env.HOST,
+  DB_PASS: process.env.PASSWORD,
+  DB_NAME: process.env.DATABASE,
+  DB_USER: process.env.USER,
 };
 
 module.exports = environment;

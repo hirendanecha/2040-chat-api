@@ -1,12 +1,13 @@
 "use strict";
 
 const mysql = require("mysql2");
+const environment = require("../src/environments/environment");
 
 const db = mysql.createConnection({
-  host: "95.217.21.79",
-  user: "root",
-  password: "JYq1Nyr2l7Cf",
-  database: "2040-chat",
+  host: environment.DB_HOST,
+  user: environment.DB_USER,
+  password: environment.DB_PASS,
+  database: environment.DB_NAME,
 });
 
 db.connect(function (err) {
