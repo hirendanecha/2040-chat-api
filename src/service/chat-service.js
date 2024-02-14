@@ -1,5 +1,6 @@
 const { executeQuery } = require("../helpers/utils");
 const { notificationMailOnInvite } = require("../helpers/utils");
+
 exports.getChatList = async function (params) {
   return await getChatList(params);
 };
@@ -72,6 +73,10 @@ exports.getRoomsIds = async function (data) {
   return await getRoomsIds(data);
 };
 
+exports.getUserDetails = async function (data) {
+  return await getUserDetails(data);
+};
+
 const getChatList = async function (params) {
   try {
     // const query = `select r.id as roomId,count(m.id) as unReadMessage ,r.profileId1 as createdBy, r.isAccepted,p.ID as profileId,p.Username,p.FirstName,p.lastName,p.ProfilePicName from chatRooms as r join profile as p on p.ID = CASE
@@ -86,6 +91,7 @@ const getChatList = async function (params) {
                   r.lastMessageText,
                   r.updatedDate,
                   r.createdDate,
+                  r.isDeleted,
                   p.ID AS profileId,
                   p.Username,
                   p.FirstName,
@@ -101,7 +107,7 @@ JOIN
 LEFT JOIN
     messages AS m ON m.roomId = r.id AND m.sentBy != ${params.profileId} AND m.isRead = 'N'
 WHERE
-    r.profileId1 = ? OR r.profileId2 = ?
+    (r.profileId1 = ? OR r.profileId2 = ?) AND r.isDeleted = 'N'
 GROUP BY
     r.id, r.profileId1, r.isAccepted,r.updatedDate, p.ID, p.Username, p.FirstName, p.LastName, p.ProfilePicName
 ORDER BY
@@ -146,8 +152,9 @@ const createChatRoom = async function (params) {
       data.profileId1,
       data.profileId2,
     ];
-    const oldRoom = await executeQuery(query, values);
-    if (!oldRoom.length) {
+    const [oldRoom] = await executeQuery(query, values);
+    console.log(oldRoom);
+    if (oldRoom.isDeleted === "Y") {
       const query = "Insert Into chatRooms set ?";
       const values = [data];
       const room = await executeQuery(query, values);
@@ -328,8 +335,7 @@ const createNotification = async function (params) {
 
 const acceptRoom = async function (params) {
   try {
-    const date = new Date();
-    const query = `update chatRooms set isAccepted = 'Y',updatedDate = ${date} where id = ? and profileId2 =?`;
+    const query = `update chatRooms set isAccepted = 'Y' where id = ? and profileId2 = ?`;
     const values = [params.roomId, params.profileId];
     const updatedRoom = await executeQuery(query, values);
     const room = await getRoom(params.roomId);
@@ -477,17 +483,25 @@ const deleteMessage = async function (params) {
 const deleteRoom = async function (params) {
   try {
     const data = {
-      id: params.id,
+      id: params?.roomId,
     };
-    const query = "delete from chatRooms where id = ?";
+    const query = `update chatRooms set isDeleted = 'Y' where id = ?`;
     const values = [data.id];
     const message = await executeQuery(query, values);
-
-    // const query1 = "select * from messages where roomId = ?";
-    // const values1 = data.roomId;
-    // const messageList = await executeQuery(query1, values1);.0
-    data.isDeleted = true;
-    return data;
+    let notification = {};
+    if (params.profileId && params.createdBy) {
+      notification = await createNotification({
+        notificationByProfileId: params?.profileId,
+        notificationToProfileId: params?.createdBy,
+        actionType: "M",
+        roomId: params?.roomId,
+        msg: "has decline your invitation",
+      });
+      notification["isRoomDeleted"] = true;
+      return { data, notification };
+    } else {
+      return { data };
+    }
   } catch (error) {
     return error;
   }
@@ -762,4 +776,10 @@ const getRoomsIds = async function (id) {
   } catch (error) {
     return error;
   }
+};
+
+const getUserDetails = async function (id) {
+  const query = `select Username from profile where ID = ${id}`;
+  const [profile] = await executeQuery(query);
+  return profile?.Username;
 };

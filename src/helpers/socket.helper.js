@@ -138,6 +138,7 @@ socket.config = (server) => {
     });
 
     // Message Socket //
+    // Message Socket //
     socket.on("join-chat-room", async (params) => {
       socket.join(params.room, {
         ...params,
@@ -300,15 +301,16 @@ socket.config = (server) => {
     });
 
     socket.on("accept-room", async (params, cb) => {
-      logger.info("read-message", {
+      logger.info("accept-room", {
         ...params,
         address,
         id: socket.id,
-        method: "read-message",
+        method: "accept-room",
       });
       try {
         if (params) {
           const data = await chatService.acceptRoom(params);
+          console.log(data);
           if (data) {
             io.to(`${data?.notification?.notificationToProfileId}`).emit(
               "notification",
@@ -380,7 +382,13 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.deleteRoom(params);
-          io.to(`${params?.profileId}`).emit("new-message", data);
+          console.log(data);
+          if (data?.notification) {
+            io.to(`${data.notification?.notificationToProfileId}`).emit(
+              "notification",
+              data?.notification
+            );
+          }
           if (data) {
             return cb(data);
           }
@@ -477,7 +485,10 @@ socket.config = (server) => {
             io.to(`${params?.roomId}`).emit("notification", data);
             return cb(true);
           } else {
-            io.to(`${params?.notificationToProfileId}`).emit("notification", data);
+            io.to(`${params?.notificationToProfileId}`).emit(
+              "notification",
+              data
+            );
             return cb(true);
           }
         }
@@ -574,6 +585,36 @@ socket.config = (server) => {
           const groupList = await chatService.removeMember(params);
           if (cb) {
             return cb(groupList);
+          }
+        }
+      } catch (error) {
+        cb(error);
+      }
+    });
+
+    socket.on("start-typing", async (params, cb) => {
+      logger.info("start-typing", {
+        ...params,
+        address,
+        id: socket.id,
+        method: "start-typing",
+      });
+      try {
+        if (params) {
+          const data = {
+            profileId: params.profileId,
+            isTyping: params.isTyping,
+            roomId: params.roomId,
+            groupId: params.groupId,
+          };
+          data["Username"] = await chatService.getUserDetails(data.profileId);
+          if (params.roomId) {
+            io.to(`${data?.profileId}`).emit("typing", data);
+          } else {
+            io.to(`${data?.groupId}`).emit("typing", data);
+          }
+          if (cb) {
+            return cb();
           }
         }
       } catch (error) {
