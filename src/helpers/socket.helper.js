@@ -138,7 +138,6 @@ socket.config = (server) => {
     });
 
     // Message Socket //
-    // Message Socket //
     socket.on("join-chat-room", async (params) => {
       socket.join(params.room, {
         ...params,
@@ -609,7 +608,7 @@ socket.config = (server) => {
           };
           data["Username"] = await chatService.getUserDetails(data.profileId);
           if (params.roomId) {
-            io.to(`${data?.profileId}`).emit("typing", data);
+            io.to(`${data?.roomId}`).emit("typing", data);
           } else {
             io.to(`${data?.groupId}`).emit("typing", data);
           }

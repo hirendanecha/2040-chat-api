@@ -144,17 +144,15 @@ const createChatRoom = async function (params) {
       profileId1: params?.profileId1,
       profileId2: params?.profileId2,
     };
-    const query =
-      "select * from chatRooms as r where (r.profileId1 = ? and r.profileId2 = ?) or (r.profileId2 = ? and r.profileId1 = ?)";
+    const query = `select * from chatRooms as r where r.isDeleted = 'N' AND (r.profileId1 = ? and r.profileId2 = ?) or (r.profileId2 = ? and r.profileId1 = ?)`;
     const values = [
       data.profileId1,
       data.profileId2,
       data.profileId1,
       data.profileId2,
     ];
-    const [oldRoom] = await executeQuery(query, values);
-    console.log(oldRoom);
-    if (oldRoom.isDeleted === "Y") {
+    const oldRoom = await executeQuery(query, values);
+    if (!oldRoom.length) {
       const query = "Insert Into chatRooms set ?";
       const values = [data];
       const room = await executeQuery(query, values);
@@ -198,6 +196,7 @@ const sendMessage = async function (params) {
       groupId: params?.groupId,
       sentBy: params.sentBy,
       messageMedia: params.messageMedia,
+      parentMessageId: params.parentMessageId,
     };
     const query = "select * from chatRooms where id = ?";
     const values = [data.roomId];
@@ -211,6 +210,13 @@ const sendMessage = async function (params) {
         "select m.*,p.Username,p.ProfilePicName,p.FirstName from messages as m left join profile as p on p.ID = m.sentBy where m.id = ?";
       const values1 = message.insertId;
       const [newMessage] = await executeQuery(query1, values1);
+      if (newMessage?.parentMessageId) {
+        const query1 =
+          "select m.*,p.Username,p.ProfilePicName,p.FirstName from messages as m left join profile as p on p.ID = m.sentBy where m.id = ?";
+        const values1 = newMessage?.parentMessageId;
+        const [parentMessage] = await executeQuery(query1, values1);
+        newMessage["parentMessage"] = parentMessage;
+      }
       if (newMessage) {
         if (data.roomId) {
           const date = new Date();
@@ -394,10 +400,19 @@ const editMessage = async function (params) {
       groupId: params?.groupId,
       sentBy: params.sentBy,
       messageMedia: params.messageMedia,
+      parentMessageId: params.parentMessageId,
     };
     const query = "update messages set ? where id = ?";
     const values = [data, data.id];
     const message = await executeQuery(query, values);
+    let parentMessage = {};
+    if (data?.parentMessageId) {
+      const query1 =
+        "select m.*,p.Username,p.ProfilePicName,p.FirstName from messages as m left join profile as p on p.ID = m.sentBy where m.id = ?";
+      const values1 = data?.parentMessageId;
+      const [message] = await executeQuery(query1, values1);
+      parentMessage = message;
+    }
     if (data.roomId) {
       const date = new Date();
       const query =
@@ -415,6 +430,7 @@ const editMessage = async function (params) {
     const query1 = "select * from messages where id = ?";
     const values1 = [data?.id];
     const [editMessage] = await executeQuery(query1, values1);
+    editMessage["parentMessage"] = parentMessage;
     return editMessage;
   } catch (error) {
     console.log(error);
@@ -431,9 +447,13 @@ const deleteMessage = async function (params) {
       sentBy: params.sentBy,
     };
     const query = "delete from messages where id = ?";
-    const values = [data.id];
+    const values = [data.id, data.id];
     const message = await executeQuery(query, values);
-    console.log("message", message);
+    const deleteChild = await executeQuery(
+      "delete from messages where parentMessageId in (?)",
+      values
+    );
+    console.log("message", message, deleteChild);
     if (message) {
       let messageList = [];
       if (data?.roomId) {
@@ -495,7 +515,7 @@ const deleteRoom = async function (params) {
         notificationToProfileId: params?.createdBy,
         actionType: "M",
         roomId: params?.roomId,
-        msg: "has decline your invitation",
+        msg: "has declined your invitation",
       });
       notification["isRoomDeleted"] = true;
       return { data, notification };
@@ -597,7 +617,7 @@ const declineCall = async function (params) {
         roomId: params?.roomId,
         notificationByProfileId: params?.notificationByProfileId || null,
         actionType: "DC",
-        msg: "Decline call..",
+        msg: "Declined call..",
       };
       const notification = await createNotification(data);
       return notification;
@@ -657,6 +677,8 @@ const createGroups = async function (params) {
         const values = [data, params?.groupId];
         const updateGroup = await executeQuery(query, values);
       }
+      console.log(params.profileIds);
+
       let notifications = [];
       let groupList = {};
       if (params.profileIds.length > 0) {

@@ -1,19 +1,18 @@
 const jwt = require("jsonwebtoken");
+const env = require("../environments/environment");
+const tokenBlacklist = new Set();
 
-module.exports = function (req, res, next) {
-  //Get token from header
-  console.log(req.headers.authorization);
-
+exports.authorization = function (req, res, next) {
   if (req.headers.authorization) {
     const token = req.headers.authorization.split(" ")[1];
-
-    //Check if token exist
     if (!token) {
       return res.status(401).json({ message: "Unauthorized token" });
     }
-    //Verify token
+    if (tokenBlacklist.has(token)) {
+      return res.status(401).json({ message: "invalid token" });
+    }
     try {
-      const decoded = jwt.verify(token, "MyS3cr3t");
+      const decoded = jwt.verify(token, env.JWT_SECRET_KEY);
       req.user = decoded.user;
       next();
     } catch (err) {
@@ -22,4 +21,8 @@ module.exports = function (req, res, next) {
   } else {
     return res.status(401).json({ message: "Unauthorized token" });
   }
+};
+
+exports.setTokenInList = function (token) {
+  tokenBlacklist.add(token);
 };
