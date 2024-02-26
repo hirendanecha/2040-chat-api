@@ -7,7 +7,7 @@ let transporter = nodemailer.createTransport({
   // service: "gmail",
   // auth: { user: environment.SMTP_USER, pass: environment.SMTP_PASS },
   // tls: {
-  //   host: "freedom.social",
+  //   host: "2040Chat.social",
   //   port: 993,
   // },
   headers: "X-PM-Message-Stream: transactional",
@@ -25,7 +25,7 @@ exports.sendMail = async function (mailObj) {
     );
     return transporter.sendMail({
       from: {
-        name: "Freedom.Buzz",
+        name: "2040.chat",
         address: "info@2040.chat",
       },
       to: mailObj.email,

@@ -95,7 +95,7 @@ exports.notificationMail = async (userData) => {
 
   const mailObj = {
     email: userData.email,
-    subject: "Freedom notification",
+    subject: "2040-chat notification",
     root: "../email-templates/notification.ejs",
     templateData: { name: name, msg: msg, url: redirectUrl },
   };
@@ -111,7 +111,7 @@ exports.notificationMailOnInvite = async (userData) => {
 
   const mailObj = {
     email: userData.email,
-    subject: "Freedom notification",
+    subject: "2040.chat notification",
     root: "../email-templates/notification.ejs",
     templateData: { name: name, msg: msg, url: redirectUrl },
   };
