@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const utilsController = require("../controllers/utils.controller");
 const uploadFileMiddleware = require("../middleware/upload");
+const authorize = require("../middleware/authorize");
 
 router.post("/upload", utilsController.fileupload);
 router.post(

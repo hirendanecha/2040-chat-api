@@ -469,7 +469,6 @@ exports.resendVerification = function (req, res) {
 };
 
 exports.logout = function (req, res) {
-  console.log("innn==>");
   const token = req.headers.authorization.split(" ")[1];
   authorize.setTokenInList(token);
   res.clearCookie("auth-user", {

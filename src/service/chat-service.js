@@ -77,6 +77,14 @@ exports.getUserDetails = async function (data) {
   return await getUserDetails(data);
 };
 
+exports.switchChat = async function (data) {
+  return await switchChat(data);
+};
+
+exports.readGroupMessage = async function (data) {
+  return await readGroupMessage(data);
+};
+
 const getChatList = async function (params) {
   try {
     // const query = `select r.id as roomId,count(m.id) as unReadMessage ,r.profileId1 as createdBy, r.isAccepted,p.ID as profileId,p.Username,p.FirstName,p.lastName,p.ProfilePicName from chatRooms as r join profile as p on p.ID = CASE
@@ -197,6 +205,7 @@ const sendMessage = async function (params) {
       sentBy: params.sentBy,
       messageMedia: params.messageMedia,
       parentMessageId: params.parentMessageId,
+      isRead: params.isRead || null,
     };
     const query = "select * from chatRooms where id = ?";
     const values = [data.roomId];
@@ -283,6 +292,28 @@ const readMessage = async function (params) {
     const messages = await executeQuery(query, values);
     if (messages) {
       return params.ids;
+    }
+  } catch (error) {
+    return error;
+  }
+};
+
+const readGroupMessage = async function (params) {
+  try {
+    let readMessageIds = [];
+    params.ids.forEach(async (element) => {
+      const data = {
+        messageId: element,
+        readBy: params.readBy,
+        groupId: params.groupId,
+      };
+      console.log(data);
+      const query = `insert into readMessage set ?`;
+      const message = await executeQuery(query, data);
+      readMessageIds.push(message.insertId);
+    });
+    if (readMessageIds) {
+      return readMessageIds;
     }
   } catch (error) {
     return error;
@@ -760,8 +791,8 @@ const getGroupList = async function (params) {
             LEFT JOIN groupMembers AS gm ON gm.groupId = g.id
             LEFT JOIN profile AS p ON p.ID = g.profileId
             LEFT JOIN messages AS m ON m.groupId = g.id
-                                   AND m.sentBy != ?
-                                   AND m.isRead = 'N'
+            AND m.createdDate > gm.switchDate
+            AND m.sentBy != ?
             WHERE gm.profileId = ?
             GROUP BY g.id
             ORDER BY g.updatedDate DESC`;
@@ -804,4 +835,11 @@ const getUserDetails = async function (id) {
   const query = `select Username from profile where ID = ${id}`;
   const [profile] = await executeQuery(query);
   return profile?.Username;
+};
+
+const switchChat = async function (params) {
+  const query = `update groupMembers set switchDate = '${params.date}' where groupId = ${params.groupId} and profileId = ${params.profileId}`;
+  const data = await executeQuery(query);
+  console.log(data);
+  return data;
 };
