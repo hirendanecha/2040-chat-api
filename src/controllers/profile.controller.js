@@ -26,11 +26,15 @@ exports.FindProfieById = async function (req, res) {
   if (req.params.id) {
     const id = req.params.id;
     console.log(id);
-    const profile = await Profile.FindById(id);
-    if (!profile) {
-      return utils.send500({ error: true, message: "not found" });
+    if (id) {
+      const profile = await Profile.FindById(id);
+      if (!profile) {
+        return utils.send500({ error: true, message: "not found" });
+      } else {
+        return res.json({ data: profile, error: false });
+      }
     } else {
-      return res.json({ data: profile, error: false });
+      return utils.send500({ error: true, message: "not found" });
     }
     // Profile.FindById(id, async function   (err, profile) {
     //   if (err) {

@@ -299,6 +299,26 @@ socket.config = (server) => {
       }
     });
 
+    socket.on("read-group-message", async (params, cb) => {
+      logger.info("read-group-message", {
+        ...params,
+        address,
+        id: socket.id,
+        method: "read-group-message",
+      });
+      try {
+        if (params) {
+          const data = await chatService.readGroupMessage(params);
+          // io.to(params.profileId).emit("update-message", data.ids);
+          if (data) {
+            return cb(data);
+          }
+        }
+      } catch (error) {
+        cb(error);
+      }
+    });
+
     socket.on("accept-room", async (params, cb) => {
       logger.info("accept-room", {
         ...params,
