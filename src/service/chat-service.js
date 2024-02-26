@@ -298,27 +298,27 @@ const readMessage = async function (params) {
   }
 };
 
-const readGroupMessage = async function (params) {
-  try {
-    let readMessageIds = [];
-    params.ids.forEach(async (element) => {
-      const data = {
-        messageId: element,
-        readBy: params.readBy,
-        groupId: params.groupId,
-      };
-      console.log(data);
-      const query = `insert into readMessage set ?`;
-      const message = await executeQuery(query, data);
-      readMessageIds.push(message.insertId);
-    });
-    if (readMessageIds) {
-      return readMessageIds;
-    }
-  } catch (error) {
-    return error;
-  }
-};
+// const readGroupMessage = async function (params) {
+//   try {
+//     let readMessageIds = [];
+//     params.ids.forEach(async (element) => {
+//       const data = {
+//         messageId: element,
+//         readBy: params.readBy,
+//         groupId: params.groupId,
+//       };
+//       console.log(data);
+//       const query = `insert into readMessage set ?`;
+//       const message = await executeQuery(query, data);
+//       readMessageIds.push(message.insertId);
+//     });
+//     if (readMessageIds) {
+//       return readMessageIds;
+//     }
+//   } catch (error) {
+//     return error;
+//   }
+// };
 
 const createNotification = async function (params) {
   try {
@@ -842,4 +842,18 @@ const switchChat = async function (params) {
   const data = await executeQuery(query);
   console.log(data);
   return data;
+};
+
+const readGroupMessage = async function (params) {
+  try {
+    const date = moment(params?.createdDate)
+      .utc()
+      .local()
+      .format("YYYY-MM-DD HH:mm:ss");
+    const query = `select p.ID,p.Username,p.ProfilePicName,p.FirstName from profile as p left join groupMembers as gm on p.ID = gm.profileId where gm.groupId = ${params.groupId} and gm.switchDate > '${date}'`;
+    const readUsers = await executeQuery(query);
+    return readUsers;
+  } catch (error) {
+    return null;
+  }
 };

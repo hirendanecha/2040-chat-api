@@ -97,7 +97,7 @@ Profile.FindById = async function (profileId) {
     County
   FROM profile WHERE ID=?`;
   const values = profileId;
-  const profile = await executeQuery(query, values);
+  let profile = await executeQuery(query, values);
   return profile;
 };
 
