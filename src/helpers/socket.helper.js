@@ -289,7 +289,7 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.readMessage(params);
-          // io.to(params.profileId).emit("update-message", data.ids);
+          io.to(params.roomId).emit("seen-room-message", data.ids);
           if (data) {
             return cb(data.ids);
           }
@@ -309,9 +309,9 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.readGroupMessage(params);
-          if (params.groupId) {
+          if (params?.groupId) {
             console.log("read-message-user", data);
-            io.to(params.groupId).emit("read-message-user", data);
+            io.to(`${params?.groupId}`).emit("read-message-user", data);
           }
           if (data) {
             return cb(data);

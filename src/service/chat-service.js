@@ -1,5 +1,6 @@
 const { executeQuery } = require("../helpers/utils");
 const { notificationMailOnInvite } = require("../helpers/utils");
+const moment = require("moment");
 
 exports.getChatList = async function (params) {
   return await getChatList(params);
