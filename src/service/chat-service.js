@@ -315,6 +315,7 @@ const readMessage = async function (params) {
 //     if (readMessageIds) {
 //       return readMessageIds;
 //     }
+//     // return params.ids;
 //   } catch (error) {
 //     return error;
 //   }
@@ -796,6 +797,7 @@ const getGroupList = async function (params) {
             WHERE gm.profileId = ?
             GROUP BY g.id
             ORDER BY g.updatedDate DESC`;
+    // LEFT JOIN readMessage AS rm ON rm.messageId = m.id
     const values = [params.profileId, params.profileId];
     const groupsList = await executeQuery(query, values);
     return groupsList;
@@ -850,7 +852,7 @@ const readGroupMessage = async function (params) {
       .utc()
       .local()
       .format("YYYY-MM-DD HH:mm:ss");
-    const query = `select p.ID,p.Username,p.ProfilePicName,p.FirstName from profile as p left join groupMembers as gm on p.ID = gm.profileId where gm.groupId = ${params.groupId} and gm.switchDate > '${date}'`;
+    const query = `select p.ID,p.Username,p.ProfilePicName,p.FirstName from profile as p left join groupMembers as gm on p.ID = gm.profileId where gm.groupId = ${params.groupId} and gm.switchDate < '${date}'`;
     const readUsers = await executeQuery(query);
     return readUsers;
   } catch (error) {

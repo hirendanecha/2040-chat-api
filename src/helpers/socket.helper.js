@@ -309,7 +309,10 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.readGroupMessage(params);
-          // io.to(params.profileId).emit("update-message", data.ids);
+          if (params.groupId) {
+            console.log("read-message-user", data);
+            io.to(params.groupId).emit("read-message-user", data);
+          }
           if (data) {
             return cb(data);
           }
@@ -476,11 +479,12 @@ socket.config = (server) => {
       });
       try {
         if (params) {
+          const data = await chatService.declineCall(params);
           if (params?.roomId) {
-            const data = await chatService.declineCall(params);
             io.to(`${params?.roomId}`).emit("notification", data);
             return cb(true);
-          } else {
+          } else if (params.groupId) {
+            console.log("decline-group-calll===>>>>>>>>>>>>>>>>>>>>>", data);
             io.to(`${params?.groupId}`).emit("notification", data);
             return cb(true);
           }
@@ -650,9 +654,9 @@ socket.config = (server) => {
       });
       try {
         if (params) {
-          data = await chatService.switchChat(params);
+          const data = await chatService.switchChat(params);
           if (cb) {
-            return cb(data);
+            return cb(true);
           }
         }
       } catch (error) {
