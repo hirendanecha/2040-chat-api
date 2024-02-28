@@ -289,9 +289,12 @@ socket.config = (server) => {
       try {
         if (params) {
           const data = await chatService.readMessage(params);
-          io.to(params.roomId).emit("seen-room-message", data.ids);
+          if (params?.profileId) {
+            console.log(data);
+            io.to(params?.profileId).emit("seen-room-message", data);
+          }
           if (data) {
-            return cb(data.ids);
+            return cb(data);
           }
         }
       } catch (error) {
