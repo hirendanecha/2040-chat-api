@@ -22,7 +22,7 @@ Messages.getMessages = async (limit, offset, roomId, groupId) => {
   for (const msg of searchData) {
     msg["parentMessage"] = await getMessageById(msg?.parentMessageId);
   }
-  const readBy = await getReadUser(searchData[searchData.length - 1]);
+  const readBy = await getReadUser(searchData[0]);
   return {
     count: searchCount?.[0]?.count || 0,
     messageList: searchData,
