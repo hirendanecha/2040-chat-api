@@ -8,6 +8,7 @@ const { getPagination, getCount, getPaginationData } = require("../helpers/fn");
 const { Encrypt } = require("../helpers/cryptography");
 const og = require("open-graph");
 const authorize = require("../middleware/authorize");
+const { approveUser } = require("../helpers/utils");
 
 exports.login = async function (req, res) {
   console.log("jkfhguysdhfgbdf");
@@ -316,25 +317,46 @@ exports.userSuspend = function (req, res) {
   );
 };
 
-exports.activateMedia = function (req, res) {
+exports.activateMedia = async function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
-  User.activateMedia(
-    req.params.id,
-    req.query.MediaApproved,
-    function (err, result) {
-      if (err) {
-        return utils.send500(res, err);
-      } else {
-        res.json({
-          error: false,
-          message:
-            req.query.MediaApproved === 0
-              ? "Activate media successfully"
-              : "De-activate media successfully",
-        });
+  const user = await User.findById(req.params.id);
+  console.log("user=>", user);
+  if (user) {
+    // let name=user?.userName || user?.firstName;
+    User.activateMedia(
+      req.params.id,
+      req.query.MediaApproved,
+      async function (err, result) {
+        if (err) {
+          return utils.send500(res, err);
+        } else {
+          let message='';
+          if(req.query.MediaApproved === 0){
+            message='Activate media successfully'
+          }else{
+            message='De-activate media successfully'
+          }
+
+          const userDetails={
+            firstName: user[0].FirstName,
+            lastName: user[0].LastName,
+            userName: user[0].Username,
+            email: user[0].Email,
+            msg: message,
+            // name: name
+          }
+          
+          await approveUser(userDetails)
+          return;
+        }
       }
-    }
-  );
+    );
+
+  }
+  else {
+    res.json({ error: true, message: "User not found" });
+  }
+
 };
 
 exports.delete = function (req, res) {
@@ -498,5 +520,21 @@ exports.getMeta = function (req, res) {
         });
       }
     });
+  }
+};
+
+exports.verifyToken = async function (req, res) {
+  try {
+    const token = req.params.token;
+    const decoded = jwt.verify(token, environments.JWT_SECRET_KEY);
+    if (decoded.user) {
+      res.status(200).send({ message: "Authorized User", verifiedToken: true });
+    } else {
+      res
+        .status(401)
+        .json({ message: "Unauthorized Token", verifiedToken: false });
+    }
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token", verifiedToken: false });
   }
 };
