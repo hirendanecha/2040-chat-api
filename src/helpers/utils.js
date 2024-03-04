@@ -120,8 +120,10 @@ exports.notificationMailOnInvite = async (userData) => {
   return;
 };
 
-exports.approveUser = async (userData) =>{
+exports.approveUser = async (userData) => {
   // let name = userData?.name;
+
+  console.log(userData)
   let name = userData?.userName || userData.firstName;
   let msg = userData.msg;
   let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
@@ -135,7 +137,6 @@ exports.approveUser = async (userData) =>{
 
   await email.sendMail(mailObj);
   return;
-
 }
 
 exports.executeQuery = async (query, values = []) => {
