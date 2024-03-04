@@ -297,7 +297,6 @@ exports.changeActiveStatus = function (req, res) {
   });
 };
 
-
 exports.userSuspend = function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
   User.suspendUser(
@@ -321,44 +320,37 @@ exports.userSuspend = function (req, res) {
 
 exports.activateMedia = async function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
-  const user = await User.findById(req.params.id);
-  console.log("user=>", user);
+  const [user] = await User.findById(req.params.id);
   if (user) {
     // let name=user?.userName || user?.firstName;
     User.activateMedia(
-      req.params.id,
+      user.profileId,
       req.query.MediaApproved,
       async function (err, result) {
         if (err) {
           return utils.send500(res, err);
         } else {
-          let message = '';
-          if (req.query.MediaApproved === 0) {
-            message = 'Activate media successfully'
-          } else {
-            message = 'De-activate media successfully'
-          }
+          const message = req.query?.MediaApproved
+            ? "Activate media successfully"
+            : "De-activate media successfully";
 
           const userDetails = {
-            firstName: user[0].FirstName,
-            lastName: user[0].LastName,
-            userName: user[0].Username,
-            email: user[0].Email,
+            firstName: user.FirstName,
+            lastName: user.LastName,
+            userName: user.Username,
+            email: user.Email,
             msg: message,
             // name: name
-          }
+          };
 
-          await approveUser(userDetails)
-          return;
+          await approveUser(userDetails);
+          return res.send({ error: false, message: message });
         }
       }
     );
-
-  }
-  else {
+  } else {
     res.json({ error: true, message: "User not found" });
   }
-
 };
 
 exports.delete = function (req, res) {
@@ -457,7 +449,8 @@ exports.verification = function (req, res) {
     if (err) {
       if (err?.name === "TokenExpiredError" && data?.userId) {
         return res.redirect(
-          `${environments.FRONTEND_URL
+          `${
+            environments.FRONTEND_URL
           }/user/verification-expired?user=${encodeURIComponent(data.email)}`
         );
       }
@@ -543,27 +536,34 @@ exports.verifyToken = async function (req, res) {
 exports.createAdmin = async function (req, res) {
   try {
     const id = req.params.id;
-    const user = await User.findById(id);
+    const [user] = await User.findById(id);
     if (user) {
-      await User.changeAdminAccess(user[0].Id, user[0].IsAdmin, user[0].AccountType, async function (err, result) {
-        if (err) {
-          return utils.send500(res, err);
-        } else {
-          let message = 'You\'re now Master-Admin!';
-          const userDetails = {
-            firstName: user[0].FirstName,
-            lastName: user[0].LastName,
-            userName: user[0].Username,
-            email: user[0].Email,
-            msg: message,
-          };
-          await approveUser(userDetails);
-          return;
+      await User.changeAdminAccess(
+        user.Id,
+        user.IsAdmin,
+        user.AccountType,
+        async function (err, result) {
+          if (err) {
+            return utils.send500(res, err);
+          } else {
+            let message = "You're now Master-Admin!";
+            const userDetails = {
+              firstName: user.FirstName,
+              lastName: user.LastName,
+              userName: user.Username,
+              email: user.Email,
+              msg: message,
+            };
+            await approveUser(userDetails);
+            return res.send({
+              error: false,
+              message: "Master Admin created successfully",
+            });
+          }
         }
-      });
+      );
     }
-  }
-  catch {
+  } catch {
     res.status(401).json({ message: "Unauthorized User" });
   }
-}
+};

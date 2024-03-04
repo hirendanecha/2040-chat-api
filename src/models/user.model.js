@@ -297,13 +297,12 @@ User.changeStatus = function (userId, status, result) {
   );
 };
 
-User.changeAdminAccess = function (userId,adminStatus,AccountType,result){
-  if(adminStatus==='N' && AccountType==='user')
-  {
+User.changeAdminAccess = function (userId, adminStatus, AccountType, result) {
+  if (adminStatus === "N" && AccountType === "user") {
     db.query(
       "UPDATE users SET IsAdmin = 'Y', AccountType = 'admin' WHERE Id = ?",
       [userId],
-      function (err,res){
+      function (err, res) {
         if (err) {
           console.log("error", err);
           result(err, null);
@@ -312,9 +311,9 @@ User.changeAdminAccess = function (userId,adminStatus,AccountType,result){
           result(null, res);
         }
       }
-    )
+    );
   }
-}
+};
 User.suspendUser = function (userId, status, result) {
   db.query(
     "UPDATE users SET IsSuspended = ? WHERE Id= ?",
