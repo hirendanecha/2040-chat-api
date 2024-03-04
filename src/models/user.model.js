@@ -199,12 +199,20 @@ User.update = function (user_id, user, result) {
 };
 
 User.delete = async function (userId, profileId) {
-  const query6 = "DELETE FROM users WHERE Id = ?";
-  const query7 = "DELETE FROM profile WHERE ID = ?";
+  const query = "DELETE FROM users WHERE Id = ?";
+  const query1 = "DELETE FROM profile WHERE ID = ?";
+  const query2 = `DELETE FROM chatRooms WHERE profileId1 = ${profileId} or profileId2 = ${profileId}`;
+  const query3 = `DELETE FROM groupMembers WHERE profileId = ${profileId} `;
+  const query4 = `DELETE FROM messages WHERE sentBy = ${profileId} `;
+  const query5 = `DELETE FROM notifications WHERE notificationToProfileId = ${profileId} and notificationByProfileId = ${profileId}`;
   const values = [userId];
   const values1 = [profileId];
-  await executeQuery(query6, values);
-  const data = await executeQuery(query7, values1);
+  await executeQuery(query, values);
+  await executeQuery(query2);
+  await executeQuery(query3);
+  await executeQuery(query4);
+  await executeQuery(query5);
+  const data = await executeQuery(query1, values1);
   console.log(data);
 };
 
