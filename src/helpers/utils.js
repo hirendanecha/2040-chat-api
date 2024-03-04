@@ -120,6 +120,24 @@ exports.notificationMailOnInvite = async (userData) => {
   return;
 };
 
+exports.approveUser = async (userData) =>{
+  // let name = userData?.name;
+  let name = userData?.userName || userData.firstName;
+  let msg = userData.msg;
+  let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
+
+  const mailObj = {
+    email: userData.email,
+    subject: "2040.chat notification",
+    root: "../email-templates/approve-user.ejs",
+    templateData: { name: name, msg: msg, url: redirectUrl },
+  };
+
+  await email.sendMail(mailObj);
+  return;
+
+}
+
 exports.executeQuery = async (query, values = []) => {
   return new Promise((resolve, reject) => {
     db.query(query, values, function (err, result) {
