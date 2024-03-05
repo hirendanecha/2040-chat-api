@@ -68,4 +68,38 @@ const getReadUser = async function (msg) {
   }
 };
 
+Messages.getGroup = async function (id) {
+  try {
+    const query =
+      "select g.*,count(gm.profileId) as members from chatGroups as g left join profile as p on p.ID = g.profileId left join groupMembers as gm on gm.groupId = g.id where g.id=?";
+    const values = [id];
+    const [groups] = await executeQuery(query, values);
+    if (groups.id) {
+      const getMembersQuery =
+        "select gm.*,p.Username, p.ProfilePicName,p.FirstName,p.LastName from groupMembers as gm left join profile as p on p.ID = gm.profileId where gm.groupId = ?;";
+      const members = await executeQuery(getMembersQuery, [groups?.id]);
+      groups["memberList"] = members;
+    }
+    return groups;
+  } catch (error) {
+    return error;
+  }
+};
+
+Messages.getRoom = async function (id) {
+  try {
+    const query =
+      "select r.id as roomId,r.profileId1 as createdBy, r.isAccepted,p.ID as profileId,p.Username,p.FirstName,p.lastName,p.ProfilePicName from chatRooms as r join profile as p on p.ID = r.profileId2 where r.id = ?";
+    const values = [id];
+    const room = await executeQuery(query, values);
+    console.log(room);
+    if (room) {
+      return room;
+    }
+  } catch (error) {
+    return error;
+  }
+};
+
+
 module.exports = Messages;

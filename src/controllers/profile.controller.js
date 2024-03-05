@@ -24,9 +24,8 @@ exports.create = function (req, res) {
 
 exports.FindProfieById = async function (req, res) {
   if (req.params.id) {
-    const id = req.params.id;
-    console.log(id);
-    if (id) {
+      const id = req.params.id;
+      if (id) {
       const profile = await Profile.FindById(id);
       if (!profile) {
         return utils.send500({ error: true, message: "not found" });
@@ -61,8 +60,7 @@ exports.updateProfile = async function (req, res) {
         .status(400)
         .json({ error: true, message: "Username is already exist" });
     }
-    console.log("req,body", req.body);
-    console.log("req,user", req.user);
+    
     if (req.body.Id === req.user.id) {
       if (req.body.UserID) {
         const updateUserData = {
