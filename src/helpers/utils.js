@@ -153,7 +153,7 @@ exports.executeQuery = async (query, values = []) => {
 exports.registeredUser = async (adminMail,userName) => {
   let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
 
-  let msg = `${userName} has registered for messaging on 2040 Chat.`;
+  let msg = `${userName} has registered for messaging on 2040-chat.`;
   const mailObj = {
     email: adminMail,
     subject: "New User has been registered",
