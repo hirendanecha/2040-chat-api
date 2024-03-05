@@ -114,12 +114,23 @@ exports.create = async function (req, res) {
         user.Password = encryptedPassword;
         User.create(user, async function (err, user) {
           if (err) return utils.send500(res, err);
-          await utils.registrationMail({ ...req.body }, user);
-          return res.json({
-            error: false,
-            message: "Data saved successfully",
-            data: user,
-          });
+          const adminData = await User.findAdmin();
+          const adminEmail = adminData.Email;
+
+          if (adminEmail) {
+            await utils.registeredUser(adminEmail, req.body.Username);
+            await utils.registrationMail({ ...req.body }, user);
+            return res.json({
+              error: false,
+              message: "Data saved successfully",
+              data: user
+            });
+          } else {
+            return res.status(400).send({
+              error: true,
+              message: "Something went wrong!",
+            });
+          }
         });
       } else {
         return res.status(400).send({
@@ -322,7 +333,7 @@ exports.activateMedia = async function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
   const [user] = await User.findById(req.params.id);
   if (user) {
-    // let name=user?.userName || user?.firstName;
+    let name = user?.userName || user?.firstName;
     User.activateMedia(
       user.profileId,
       req.query.MediaApproved,
@@ -331,8 +342,8 @@ exports.activateMedia = async function (req, res) {
           return utils.send500(res, err);
         } else {
           const message = req.query?.MediaApproved
-            ? "Activate media successfully"
-            : "De-activate media successfully";
+            ? `${name} Account has been Approved`
+            : `${name} Account has been Rejected`
 
           const userDetails = {
             firstName: user.FirstName,
@@ -340,7 +351,6 @@ exports.activateMedia = async function (req, res) {
             userName: user.Username,
             email: user.Email,
             msg: message,
-            // name: name
           };
 
           await approveUser(userDetails);
@@ -449,8 +459,7 @@ exports.verification = function (req, res) {
     if (err) {
       if (err?.name === "TokenExpiredError" && data?.userId) {
         return res.redirect(
-          `${
-            environments.FRONTEND_URL
+          `${environments.FRONTEND_URL
           }/user/verification-expired?user=${encodeURIComponent(data.email)}`
         );
       }
