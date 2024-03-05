@@ -70,8 +70,10 @@ const getReadUser = async function (msg) {
 
 Messages.getGroup = async function (id) {
   try {
-    const query =
-      "select g.*,count(gm.profileId) as members from chatGroups as g left join profile as p on p.ID = g.profileId left join groupMembers as gm on gm.groupId = g.id where g.id=?";
+    const query = `select g.id as groupId,g.groupName,g.profileImage,g.profileId as createdBy,
+      g.createdDate,g.updatedDate,count(gm.profileId) as members,
+      p.ID as profileId,p.Username,p.FirstName,p.lastName,p.ProfilePicName 
+      from chatGroups as g left join profile as p on p.ID = g.profileId left join groupMembers as gm on gm.groupId = g.id where g.id=?;`;
     const values = [id];
     const [groups] = await executeQuery(query, values);
     if (groups.id) {
@@ -100,6 +102,5 @@ Messages.getRoom = async function (id) {
     return error;
   }
 };
-
 
 module.exports = Messages;
