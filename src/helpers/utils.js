@@ -149,3 +149,18 @@ exports.executeQuery = async (query, values = []) => {
     });
   });
 };
+
+exports.registeredUser = async (adminMail,userName) => {
+  let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
+
+  let msg = `${userName} has registered for messaging on 2040 Chat.`;
+  const mailObj = {
+    email: adminMail,
+    subject: "New User has been registered",
+    root: "../email-templates/notification.ejs",
+    templateData: { name: 'Admin', msg: msg, url: redirectUrl},
+  };
+
+  await email.sendMail(mailObj);
+  return;
+};

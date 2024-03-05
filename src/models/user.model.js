@@ -298,9 +298,9 @@ User.changeStatus = function (userId, status, result) {
 };
 
 User.changeAdminAccess = function (userId, adminStatus, AccountType, result) {
-  if (adminStatus === "N" && AccountType === "user") {
+  if (adminStatus === "N") {
     db.query(
-      "UPDATE users SET IsAdmin = 'Y', AccountType = 'admin' WHERE Id = ?",
+      "UPDATE users SET IsAdmin = 'Y' WHERE Id = ?",
       [userId],
       function (err, res) {
         if (err) {
@@ -466,5 +466,12 @@ User.setPassword = async function (user_id, password) {
   const user = await executeQuery(query, values);
   return user;
 };
+
+User.findAdmin = async function (){
+  const query = `SELECT Email FROM users WHERE AccountType = 'admin'`
+  const [user] = await executeQuery(query);
+  console.log(user);
+  return user;
+}
 
 module.exports = User;
