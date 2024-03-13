@@ -63,14 +63,13 @@ exports.registrationMail = async (userData, userId) => {
 exports.forgotPasswordMail = async (user) => {
   console.log(user);
   if (user) {
-    let jwtSecretKey = environment.JWT_SECRET_KEY;
     let name = user?.Username || user?.FirstName + " " + user?.LastName;
     const token = jwt.sign(
       {
         userId: user?.Id,
       },
-      jwtSecretKey,
-      { expiresIn: "1 day" }
+      environment.JWT_SECRET_KEY,
+      { expiresIn: "1d" }
     );
 
     let forgotPasswordUrl = `${environment.FRONTEND_URL}reset-password/user?accesstoken=${token}`;
