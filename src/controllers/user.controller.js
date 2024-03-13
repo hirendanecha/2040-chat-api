@@ -232,8 +232,7 @@ exports.setPassword = async function (req, res) {
   } else {
     const token = req.body.token;
     const newPassword = req.body.password;
-    let jwtSecretKey = environments.JWT_SECRET_KEY;
-    const decoded = jwt.verify(token, jwtSecretKey);
+    const decoded = jwt.verify(token, environments.JWT_SECRET_KEY);
     if (decoded) {
       const user = await User.findById(decoded.userId, res);
       console.log("user=>", user);
