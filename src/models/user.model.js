@@ -111,22 +111,26 @@ User.create = function (userData, result) {
 };
 
 User.findAndSearchAll = async (limit, offset, search, startDate, endDate) => {
-  let whereCondition = `u.IsAdmin != 'Y' ${
-    search ? `AND u.Username LIKE '%${search}%'` : ""
-  }`;
-
+  let whereCondition = `${search ? `u.Username LIKE '%${search}%'` : ""}`;
   if (startDate && endDate) {
-    whereCondition += `AND u.DateCreation >= '${startDate}' AND u.DateCreation <= '${endDate}'`;
+    whereCondition += `${
+      search ? `AND` : ``
+    } u.DateCreation >= '${startDate}' AND u.DateCreation <= '${endDate}'`;
   } else if (startDate) {
-    whereCondition += `AND u.DateCreation >= '${startDate}'`;
+    whereCondition += `${search ? `AND` : ``} u.DateCreation >= '${startDate}'`;
   } else if (endDate) {
-    whereCondition += `AND u.DateCreation <= '${endDate}'`;
+    whereCondition += `${search ? `AND` : ``} u.DateCreation <= '${endDate}'`;
   }
+  console.log(whereCondition);
   const searchCount = await executeQuery(
-    `SELECT count(Id) as count FROM users as u WHERE ${whereCondition}`
+    `SELECT count(Id) as count FROM users as u ${
+      whereCondition ? `WHERE ${whereCondition}` : ``
+    }`
   );
   const searchData = await executeQuery(
-    `SELECT u.Id, u.Email, u.Username, u.IsActive, u.DateCreation, u.IsAdmin, u.FirstName, u.LastName, u.Address, u.Country, u.City, u.State, u.Zip, u.AccountType, u.IsSuspended,p.MobileNo,p.ProfilePicName,p.ID as profileId,p.MediaApproved FROM users as u left join profile as p on p.UserID = u.Id  WHERE ${whereCondition} order by DateCreation desc limit ? offset ?`,
+    `SELECT u.Id, u.Email, u.Username, u.IsActive, u.DateCreation, u.IsAdmin, u.FirstName, u.LastName, u.Address, u.Country, u.City, u.State, u.Zip, u.AccountType, u.IsSuspended,p.MobileNo,p.ProfilePicName,p.ID as profileId,p.MediaApproved FROM users as u left join profile as p on p.UserID = u.Id  ${
+      whereCondition ? `WHERE ${whereCondition}` : ``
+    } order by DateCreation desc limit ? offset ?`,
     [limit, offset]
   );
 
@@ -467,11 +471,11 @@ User.setPassword = async function (user_id, password) {
   return user;
 };
 
-User.findAdmin = async function (){
-  const query = `SELECT Email FROM users WHERE AccountType = 'admin'`
+User.findAdmin = async function () {
+  const query = `SELECT Email FROM users WHERE AccountType = 'admin'`;
   const [user] = await executeQuery(query);
   console.log(user);
   return user;
-}
+};
 
 module.exports = User;
