@@ -262,24 +262,24 @@ User.adminLogin = function (email, result) {
         const user = res[0];
         // console.log(user);
 
-        if (user?.IsAdmin === "N") {
-          return result(
-            {
-              message: "Invalid Email and Password. Kindly try again !!!!",
-              errorCode: "bad_credentials",
-            },
-            null
-          );
-        } else {
-          console.log("Login Data");
-          console.log(user);
-          const token = await generateJwtToken(res[0]);
-          return result(null, {
-            userId: user.Id,
-            user: user,
-            accessToken: token,
-          });
-        }
+        // if (user?.IsAdmin === "N") {
+        // return result(
+        //   {
+        //     message: "Invalid Email and Password. Kindly try again !!!!",
+        //     errorCode: "bad_credentials",
+        //   },
+        //   null
+        // );
+        // } else {
+        console.log("Login Data");
+        console.log(user);
+        const token = await generateJwtToken(res[0]);
+        return result(null, {
+          userId: user.Id,
+          user: user,
+          accessToken: token,
+        });
+        // }
       }
     }
   );
