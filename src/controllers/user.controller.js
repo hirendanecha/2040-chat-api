@@ -123,7 +123,7 @@ exports.create = async function (req, res) {
             return res.json({
               error: false,
               message: "Data saved successfully",
-              data: user
+              data: user,
             });
           } else {
             return res.status(400).send({
@@ -332,7 +332,7 @@ exports.activateMedia = async function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
   const [user] = await User.findById(req.params.id);
   if (user) {
-    let name = user?.userName || user?.firstName;
+    let name = user?.Username || user?.FirstName;
     User.activateMedia(
       user.profileId,
       req.query.MediaApproved,
@@ -342,7 +342,7 @@ exports.activateMedia = async function (req, res) {
         } else {
           const message = req.query?.MediaApproved
             ? `${name} Account has been Approved`
-            : `${name} Account has been Rejected`
+            : `${name} Account has been Rejected`;
 
           const userDetails = {
             firstName: user.FirstName,
@@ -458,7 +458,8 @@ exports.verification = function (req, res) {
     if (err) {
       if (err?.name === "TokenExpiredError" && data?.userId) {
         return res.redirect(
-          `${environments.FRONTEND_URL
+          `${
+            environments.FRONTEND_URL
           }/user/verification-expired?user=${encodeURIComponent(data.email)}`
         );
       }
