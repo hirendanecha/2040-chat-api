@@ -448,10 +448,10 @@ User.verification = function (token, result) {
     try {
       const updateQuery = await executeQuery(
         "UPDATE users SET IsActive ='Y' WHERE Id = ?",
-        [decoded.userId]
+        [decoded.user.userId]
       );
       const fetchUser = await executeQuery("select * from users where Id = ?", [
-        decoded.userId,
+        decoded.user.userId,
       ]);
       console.log("fetchUser", updateQuery, fetchUser);
       return result(null, fetchUser[0]);
