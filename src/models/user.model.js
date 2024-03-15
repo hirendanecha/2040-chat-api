@@ -1,7 +1,7 @@
 "use strict";
 const jwt = require("jsonwebtoken");
 var db = require("../../config/db.config");
-require("../common/common")();
+const common = require("../common/common");
 const environment = require("../environments/environment");
 const { executeQuery } = require("../helpers/utils");
 
@@ -86,7 +86,15 @@ User.login = function (email, Id, result) {
             null
           );
         } else {
-          const token = await generateJwtToken(res[0]);
+          // const token = await common.generateJwtToken(res[0]);
+          const token = await common.generateJwtToken(
+            {
+              id: res[0].profileId,
+              username: res[0].Username,
+              active: res[0].IsActive
+            },
+            '5d'
+          )
           return result(null, {
             userId: user.Id,
             user: user,
@@ -113,9 +121,8 @@ User.create = function (userData, result) {
 User.findAndSearchAll = async (limit, offset, search, startDate, endDate) => {
   let whereCondition = `${search ? `u.Username LIKE '%${search}%'` : ""}`;
   if (startDate && endDate) {
-    whereCondition += `${
-      search ? `AND` : ``
-    } u.DateCreation >= '${startDate}' AND u.DateCreation <= '${endDate}'`;
+    whereCondition += `${search ? `AND` : ``
+      } u.DateCreation >= '${startDate}' AND u.DateCreation <= '${endDate}'`;
   } else if (startDate) {
     whereCondition += `${search ? `AND` : ``} u.DateCreation >= '${startDate}'`;
   } else if (endDate) {
@@ -123,13 +130,11 @@ User.findAndSearchAll = async (limit, offset, search, startDate, endDate) => {
   }
   console.log(whereCondition);
   const searchCount = await executeQuery(
-    `SELECT count(Id) as count FROM users as u ${
-      whereCondition ? `WHERE ${whereCondition}` : ``
+    `SELECT count(Id) as count FROM users as u ${whereCondition ? `WHERE ${whereCondition}` : ``
     }`
   );
   const searchData = await executeQuery(
-    `SELECT u.Id, u.Email, u.Username, u.IsActive, u.DateCreation, u.IsAdmin, u.FirstName, u.LastName, u.Address, u.Country, u.City, u.State, u.Zip, u.AccountType, u.IsSuspended,p.MobileNo,p.ProfilePicName,p.ID as profileId,p.MediaApproved FROM users as u left join profile as p on p.UserID = u.Id  ${
-      whereCondition ? `WHERE ${whereCondition}` : ``
+    `SELECT u.Id, u.Email, u.Username, u.IsActive, u.DateCreation, u.IsAdmin, u.FirstName, u.LastName, u.Address, u.Country, u.City, u.State, u.Zip, u.AccountType, u.IsSuspended,p.MobileNo,p.ProfilePicName,p.ID as profileId,p.MediaApproved FROM users as u left join profile as p on p.UserID = u.Id  ${whereCondition ? `WHERE ${whereCondition}` : ``
     } order by DateCreation desc limit ? offset ?`,
     [limit, offset]
   );
@@ -273,7 +278,15 @@ User.adminLogin = function (email, result) {
         // } else {
         console.log("Login Data");
         console.log(user);
-        const token = await generateJwtToken(res[0]);
+        // const token = await generateJwtToken(res[0]);
+        const token = await common.generateJwtToken(
+          {
+            id: res[0].profileId,
+            username: res[0].Username,
+            active: res[0].IsActive
+          },
+          '5d'
+        )
         return result(null, {
           userId: user.Id,
           user: user,

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const __upload_dir = environment.UPLOAD_DIR;
 var fs = require("fs");
 const db = require("../../config/db.config");
+const common = require("../common/common");
 
 exports.send404 = function (res, err) {
   res.status(404).send({ error: true, message: err });
@@ -35,16 +36,23 @@ exports.getactualfilename = (fname, folder, id) => {
 };
 
 exports.registrationMail = async (userData, userId) => {
-  let jwtSecretKey = environment.JWT_SECRET_KEY;
   let name = userData?.Username || userData.FirstName + " " + userData.LastName;
 
-  const token = jwt.sign(
+  // const token = jwt.sign(
+  //   {
+  //     userId: userId,
+  //     email: userData.Email,
+  //   },
+  //   environment.JWT_SECRET_KEY,
+  //   { expiresIn: "5d" }
+  // );
+
+  const token = common.generateJwtToken(
     {
       userId: userId,
       email: userData.Email,
     },
-    jwtSecretKey,
-    { expiresIn: "730 days" }
+    '5d'
   );
 
   let registerUrl = `${environment.API_URL}customers/user/verification/${token}`;
@@ -64,12 +72,20 @@ exports.forgotPasswordMail = async (user) => {
   console.log(user);
   if (user) {
     let name = user?.Username || user?.FirstName + " " + user?.LastName;
-    const token = jwt.sign(
+    // const token = jwt.sign(
+    //   {
+    //     userId: user?.Id,
+    //   },
+    //   environment.JWT_SECRET_KEY,
+    //   { expiresIn: "1d" }
+    // );
+
+    const token = common.generateJwtToken(
       {
         userId: user?.Id,
+        email: user.Email
       },
-      environment.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
+      '1d'
     );
 
     let forgotPasswordUrl = `${environment.FRONTEND_URL}reset-password/user?accesstoken=${token}`;
@@ -149,7 +165,7 @@ exports.executeQuery = async (query, values = []) => {
   });
 };
 
-exports.registeredUser = async (adminMail,userName) => {
+exports.registeredUser = async (adminMail, userName) => {
   let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
 
   let msg = `${userName} has registered for messaging on 2040-chat.`;
@@ -157,7 +173,7 @@ exports.registeredUser = async (adminMail,userName) => {
     email: adminMail,
     subject: "New User has been registered",
     root: "../email-templates/notification.ejs",
-    templateData: { name: 'Admin', msg: msg, url: redirectUrl},
+    templateData: { name: 'Admin', msg: msg, url: redirectUrl },
   };
 
   await email.sendMail(mailObj);

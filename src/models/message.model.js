@@ -1,5 +1,4 @@
 "use strict";
-require("../common/common")();
 const { executeQuery } = require("../helpers/utils");
 const moment = require("moment");
 var Messages = function (data) {
