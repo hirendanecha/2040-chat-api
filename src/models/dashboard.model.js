@@ -1,6 +1,5 @@
 "use strict";
 var db = require("../../config/db.config");
-require("../common/common")();
 const { getPagination, getPaginationData } = require("../helpers/fn");
 const { executeQuery } = require("../helpers/utils");
 
