@@ -6,14 +6,15 @@ const authorize = require("../middleware/authorize");
 
 router.post("/register", userController.create);
 router.post("/profile", profileController.create);
+router.get("/get-meta", userController.getMeta);
 router.get("/user/verification/:token", userController.verification);
 router.get("/countries", userController.getZipCountries);
 router.get("/zip/:zip", userController.getZipData);
 router.get("/profile/:id", profileController.FindProfileById);
-router.get("/verify-token/:token", userController.verifyToken); 
+router.get("/verify-token/:token", userController.verifyToken);
 router.post("/forgot-password", userController.forgotPassword);
 router.use(authorize.authorization);
-router.get('/create-admin/:id',userController.createAdmin);
+router.get("/create-admin/:id", userController.createAdmin);
 router.post("/", userController.findAll);
 router.get("/get", userController.getAll);
 router.get("/logout", userController.logout);
