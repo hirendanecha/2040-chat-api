@@ -708,6 +708,24 @@ socket.config = (server) => {
         cb(error);
       }
     });
+    socket.on("change-status", async (params, cb) => {
+      logger.info("change-status", {
+        ...params,
+        address,
+        id: socket.id,
+        method: "change-status",
+      });
+      try {
+        if (params) {
+          const data = await chatService.changeUserStatus(params);
+          if (cb) {
+            return cb(data);
+          }
+        }
+      } catch (error) {
+        cb(error);
+      }
+    });
   });
 };
 
