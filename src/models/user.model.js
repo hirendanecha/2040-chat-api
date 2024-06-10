@@ -497,4 +497,12 @@ User.findAdmin = async function () {
   return user;
 };
 
+User.getStats = async function (countryCode) {
+  const query =
+    "select state,country_code from zip_us where country_code = ? and state != '' group by state";
+  const values = [countryCode];
+  const stats = await executeQuery(query, values);
+  return stats;
+};
+
 module.exports = User;

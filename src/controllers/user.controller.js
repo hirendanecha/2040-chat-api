@@ -328,7 +328,6 @@ exports.userSuspend = function (req, res) {
   );
 };
 
-
 exports.activateMedia = async function (req, res) {
   console.log(req.params.id, req.query.IsSuspended);
   const [user] = await User.findById(req.params.id);
@@ -582,5 +581,18 @@ exports.createAdmin = async function (req, res) {
     }
   } catch {
     res.status(401).json({ message: "Unauthorized User" });
+  }
+};
+
+exports.getStats = async function (req, res) {
+  console.log("innn");
+  const countryCode = req?.query?.countryCode;
+  if (countryCode) {
+    const states = await User.getStats(countryCode);
+    if (states) {
+      res.json(states);
+    } else {
+      res.status(404).send({ message: "not found" });
+    }
   }
 };
