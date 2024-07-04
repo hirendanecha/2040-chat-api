@@ -550,17 +550,17 @@ socket.config = (server) => {
             }
           }
           socket.join(`${data.groupId}`);
-          console.log("group", data.notifications);
           if (data?.notifications) {
-            for (const key in data?.notifications) {
-              if (Object.hasOwnProperty.call(data?.notifications, key)) {
-                const notification = data?.notifications[key];
-                io.to(`${notification.notificationToProfileId}`).emit(
+            for (const notification of data?.notifications) {
+              if (notification?.notificationToProfileId) {
+                io.to(`${notification?.notificationToProfileId}`).emit(
                   "notification",
                   notification
                 );
               }
             }
+          } else {
+            console.warn("No notifications found in data.");
           }
           return cb(data?.groupList);
         }
