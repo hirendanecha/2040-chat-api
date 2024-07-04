@@ -30,7 +30,7 @@ socket.config = (server) => {
         socket.user = decoded.user;
         const chatData = await chatService.getRoomsIds(socket.user.id);
         if (chatData) {
-          for (const roomId of chatData.roomsIds) {
+          for (const roomId of chatData?.roomsIds) {
             const chat = roomId;
             console.log(`${chat.roomId}`);
             socket.join(`${chat.roomId}`);
