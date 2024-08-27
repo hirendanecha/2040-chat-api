@@ -167,7 +167,10 @@ User.findById = async function (user_id) {
   u.Username,
   u.AccountType,
   u.IsSuspended,
-  p.ID as profileId
+  p.ID as profileId,
+  p.messageNotificationSound,
+  p.callNotificationSound,
+  p.tagNotificationSound
 FROM users as u left join profile as p on p.UserID = u.Id WHERE u.Id = ? `;
   const values = [user_id];
   const user = await executeQuery(query, values);
