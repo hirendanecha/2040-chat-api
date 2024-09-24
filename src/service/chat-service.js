@@ -761,7 +761,7 @@ const createGroups = async function (params) {
 
       let notifications = [];
       let groupList = {};
-      if (params.profileIds.length > 0) {
+      if (params.profileIds.length >= 0) {
         for (const id of params.profileIds) {
           const data = {
             groupId: params?.groupId,
@@ -783,11 +783,12 @@ const createGroups = async function (params) {
                 : "changed group details"
             }`,
           });
+
           notifications.push(notification);
+          // }
         }
       } else {
         groupList = await getGroup(params);
-        console.log("getttt===>");
         return { groupList };
       }
       groupList = await getGroup(params);
