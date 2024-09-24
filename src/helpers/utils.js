@@ -47,13 +47,10 @@ exports.registrationMail = async (userData, userId) => {
   //   { expiresIn: "5d" }
   // );
 
-  const token = common.generateJwtToken(
-    {
-      userId: userId,
-      email: userData.Email,
-    },
-    '5d'
-  );
+  const token = common.generateJwtToken({
+    userId: userId,
+    email: userData.Email,
+  });
 
   let registerUrl = `${environment.API_URL}customers/user/verification/${token}`;
 
@@ -80,13 +77,10 @@ exports.forgotPasswordMail = async (user) => {
     //   { expiresIn: "1d" }
     // );
 
-    const token = common.generateJwtToken(
-      {
-        userId: user?.Id,
-        email: user.Email
-      },
-      '1d'
-    );
+    const token = common.generateJwtToken({
+      userId: user?.Id,
+      email: user.Email,
+    });
 
     let forgotPasswordUrl = `${environment.FRONTEND_URL}reset-password/user?accesstoken=${token}`;
     const mailObj = {
@@ -138,7 +132,7 @@ exports.notificationMailOnInvite = async (userData) => {
 exports.approveUser = async (userData) => {
   // let name = userData?.name;
 
-  console.log(userData)
+  console.log(userData);
   let name = userData?.userName || userData.firstName;
   let msg = userData.msg;
   let redirectUrl = `${environment.FRONTEND_URL}profile-chats`;
@@ -152,7 +146,7 @@ exports.approveUser = async (userData) => {
 
   await email.sendMail(mailObj);
   return;
-}
+};
 
 exports.executeQuery = async (query, values = []) => {
   return new Promise((resolve, reject) => {
@@ -173,7 +167,7 @@ exports.registeredUser = async (adminMail, userName) => {
     email: adminMail,
     subject: "New User has been registered",
     root: "../email-templates/notification.ejs",
-    templateData: { name: 'Admin', msg: msg, url: redirectUrl },
+    templateData: { name: "Admin", msg: msg, url: redirectUrl },
   };
 
   await email.sendMail(mailObj);
