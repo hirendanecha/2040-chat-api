@@ -621,8 +621,11 @@ const deleteRoom = async function (params) {
 const startCall = async function (params) {
   try {
     if (params) {
-      const query = `select * from calls_logs where profileId = ${params.notificationToProfileId} and isOnCall = 'Y' and endDate is null`;
-      const [callLogs] = await executeQuery(query);
+      const notificationToProfileId = params?.notificationToProfileId ?? null;
+      const groupId = params?.groupId ?? null;
+      const query = `select * from calls_logs where (profileId = '${notificationToProfileId}' or groupId = '${groupId}') and isOnCall = 'Y' and endDate is null`;
+      const callLogs = await executeQuery(query);
+      console.log("callLogs", callLogs);
       const callLogsData = {
         profileId: params?.notificationByProfileId,
         isOnCall: "Y",
@@ -635,7 +638,7 @@ const startCall = async function (params) {
         const values = [callLogsData];
         await executeQuery(query, values);
       }
-      console.log("callLogs", callLogs);
+
       if (params?.roomId) {
         const data = {
           notificationToProfileId: params?.notificationToProfileId || null,
@@ -650,6 +653,11 @@ const startCall = async function (params) {
         const [profile] = await executeQuery(query);
         notification["Username"] = profile?.Username;
         notification["ProfilePicName"] = profile?.ProfilePicName;
+        if (callLogs?.isOnCall === "Y") {
+          notification["isOnCall"] = callLogs?.isOnCall;
+        } else {
+          notification["isOnCall"] = "N";
+        }
         return { notification };
       } else {
         const data = {
@@ -660,6 +668,7 @@ const startCall = async function (params) {
           msg: "incoming call...",
         };
         const notification = await createNotification(data);
+
         notification["link"] = params?.link;
         const query = `select p.Username,p.FirstName,p.LastName,p.ProfilePicName from profile as p where p.ID = ${params?.notificationByProfileId}`;
         const [profile] = await executeQuery(query);
@@ -667,6 +676,11 @@ const startCall = async function (params) {
         const group = await getGroup({ groupId: data.groupId });
         notification["ProfilePicName"] = group?.profileImage;
         notification["groupName"] = group?.groupName;
+        if (callLogs?.isOnCall === "Y") {
+          notification["isOnCall"] = callLogs?.isOnCall;
+        } else {
+          notification["isOnCall"] = "N";
+        }
         return { notification };
       }
     }
@@ -959,7 +973,7 @@ const userStatus = async function (id) {
   try {
     const query = `select userStatus from profile where ID = ${id}`;
     const [status] = await executeQuery(query);
-    return status.userStatus;
+    return status?.userStatus || null;
   } catch (error) {
     return error;
   }
