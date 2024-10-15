@@ -75,7 +75,8 @@ Profile.FindById = async function (profileId) {
   //     }
   //   }
   // );
-  const query = `SELECT ID as Id,
+  const query = `SELECT
+    p.ID as Id,
     u.Email,
     p.FirstName,
     p.LastName,
