@@ -76,6 +76,7 @@ Profile.FindById = async function (profileId) {
   //   }
   // );
   const query = `SELECT ID as Id,
+    u.Email,
     FirstName,
     LastName,
     UserID,
@@ -101,7 +102,7 @@ Profile.FindById = async function (profileId) {
     messageNotificationSound,
     callNotificationSound,
     tagNotificationSound
-  FROM profile WHERE ID=?`;
+  FROM profile LEFT JOIN users as u on u.Id = profile.UserID  WHERE ID=?`;
   const values = profileId;
   let profile = await executeQuery(query, values);
   return profile;
