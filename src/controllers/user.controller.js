@@ -9,6 +9,7 @@ const { Encrypt } = require("../helpers/cryptography");
 const og = require("open-graph");
 const authorize = require("../middleware/authorize");
 const { approveUser } = require("../helpers/utils");
+const Profile = require("../models/profile.model");
 
 exports.login = async function (req, res) {
   console.log("jkfhguysdhfgbdf");
@@ -537,8 +538,19 @@ exports.verifyToken = async function (req, res) {
   try {
     const token = req.params.token;
     const decoded = jwt.verify(token, environments.JWT_SECRET_KEY);
+    console.log(decoded.user);
+
     if (decoded.user) {
-      res.status(200).send({ message: "Authorized User", verifiedToken: true });
+      const [profile] = await Profile.FindById(decoded.user.id);
+      if (profile?.IsSuspended === "Y") {
+        res
+          .status(401)
+          .send({ message: "user has been suspended", verifiedToken: false });
+      } else {
+        res
+          .status(200)
+          .send({ message: "Authorized User", verifiedToken: true });
+      }
     } else {
       res
         .status(401)

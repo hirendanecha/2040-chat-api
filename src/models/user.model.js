@@ -288,14 +288,7 @@ User.adminLogin = function (email, result) {
         console.log("Login Data");
         console.log(user);
         // const token = await generateJwtToken(res[0]);
-        const token = await common.generateJwtToken(
-          {
-            id: res[0].profileId,
-            username: res[0].Username,
-            active: res[0].IsActive,
-          },
-          "5d"
-        );
+        const token = await common.generateJwtToken(res[0]);
         return result(null, {
           userId: user.Id,
           user: user,

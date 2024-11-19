@@ -1,5 +1,9 @@
 const { executeQuery } = require("../helpers/utils");
-const { notificationMailOnInvite } = require("../helpers/utils");
+const {
+  notificationMailOnInvite,
+  notificationMail,
+} = require("../helpers/utils");
+
 const { getPagination, getCount, getPaginationData } = require("../helpers/fn");
 const moment = require("moment");
 
@@ -90,7 +94,6 @@ exports.readGroupMessage = async function (data) {
 exports.resendRoom = async function (data) {
   return await resendRoom(data);
 };
-
 exports.userStatus = async function (id) {
   return await userStatus(id);
 };
@@ -101,7 +104,9 @@ exports.changeUserStatus = async function (data) {
 exports.getMessages = async function (data) {
   return await getMessages(data);
 };
-
+exports.getRoomByProfileId = async function (data) {
+  return await getRoomByProfileId(data);
+};
 exports.endCall = async function (data) {
   return await endCall(data);
 };
@@ -112,6 +117,10 @@ exports.checkCall = async function (data) {
 
 exports.suspendUser = function (data) {
   return suspendUser(data);
+};
+
+exports.sendNotificationEmail = async function (data) {
+  return await sendNotificationEmail(data);
 };
 
 const getChatList = async function (params) {
@@ -280,6 +289,40 @@ const sendMessage = async function (params) {
             actionType: "M",
             msg: "sent you a message in group",
           });
+          if (params?.tags?.length > 0) {
+            const notifications = [];
+            for (const key in params?.tags) {
+              if (Object.hasOwnProperty.call(params?.tags, key)) {
+                const tag = params?.tags[key];
+
+                // const notification = await createNotification({
+                //   notificationToProfileId: tag?.id,
+                //   groupId: data?.groupId,
+                //   notificationByProfileId: data?.sentBy,
+                //   actionType: "T",
+                //   msg: "tagged you in message",
+                // });
+                const findUser = `select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.messageNotificationEmail = 'Y' and p.ID = ?`;
+                const values = [tag?.id];
+                const userData = await executeQuery(findUser, values);
+                if (userData?.length) {
+                  const senderData = await getGroup({ groupId: data?.groupId });
+                  // notifications.push(notification);
+                  if (tag?.id) {
+                    const userDetails = {
+                      email: userData[0].Email,
+                      userName: userData[0].Username,
+                      senderUsername: senderData.groupName,
+                      ProfilePicName: senderData.profileImage,
+                      type: "message",
+                      groupId: senderData?.id,
+                    };
+                    await notificationMail(userDetails);
+                  }
+                }
+              }
+            }
+          }
           return { newMessage, notification };
         }
       }
@@ -370,6 +413,7 @@ const createNotification = async function (params) {
       actionType: actionType,
       notificationDesc: desc,
     };
+    console.log("New-notification", data);
     if (data.notificationByProfileId !== data.notificationToProfileId) {
       const query1 = "insert into notifications set ?";
       const values1 = [data];
@@ -528,12 +572,16 @@ const deleteMessage = async function (params) {
         console.log("updateRoom->", updatedRoom);
         data.isDeleted = true;
         return data;
+        // if (messageList) {
+        // }
       }
       if (data?.groupId) {
         const query =
           "select * from messages where groupId = ? order by createdDate desc limit 1";
         const values = data.groupId;
         [messageList] = await executeQuery(query, values);
+        // if (messageList) {
+        // }
         const query1 = `update chatGroups set lastMessageText = ?,updatedDate = ? where id = ?`;
         const values1 = [
           messageList?.messageText || null,
@@ -628,8 +676,9 @@ const startCall = async function (params) {
       const notificationToProfileId = params?.notificationToProfileId ?? null;
       const groupId = params?.groupId ?? null;
       const query = `select * from calls_logs where (profileId = '${notificationToProfileId}' or groupId = '${groupId}') and isOnCall = 'Y' and endDate is null`;
-      const callLogs = await executeQuery(query);
+      const [callLogs] = await executeQuery(query);
       console.log("callLogs", callLogs);
+
       const callLogsData = {
         profileId: params?.notificationByProfileId,
         isOnCall: "Y",
@@ -672,7 +721,6 @@ const startCall = async function (params) {
           msg: "incoming call...",
         };
         const notification = await createNotification(data);
-
         notification["link"] = params?.link;
         const query = `select p.Username,p.FirstName,p.LastName,p.ProfilePicName from profile as p where p.ID = ${params?.notificationByProfileId}`;
         const [profile] = await executeQuery(query);
@@ -914,7 +962,6 @@ const getUserDetails = async function (id) {
 const switchChat = async function (params) {
   const query = `update groupMembers set switchDate = '${params.date}' where groupId = ${params.groupId} and profileId = ${params.profileId}`;
   const data = await executeQuery(query);
-  console.log(data);
   return data;
 };
 
@@ -977,7 +1024,7 @@ const userStatus = async function (id) {
   try {
     const query = `select userStatus from profile where ID = ${id}`;
     const [status] = await executeQuery(query);
-    return status?.userStatus || null;
+    return status?.userStatus;
   } catch (error) {
     return error;
   }
@@ -1049,9 +1096,37 @@ const getReadUser = async function (msg) {
   }
 };
 
+const getRoomByProfileId = async function (data) {
+  try {
+    const query = `select 
+                  r.id AS roomId,
+                  r.profileId1 AS createdBy,
+                  r.isAccepted,
+                  r.lastMessageText,
+                  r.updatedDate,
+                  r.createdDate,
+                  r.isDeleted,
+                  p.ID AS profileId,
+                  p.Username,
+                  p.FirstName,
+                  p.LastName,
+                  p.ProfilePicName
+    from chatRooms as r left join
+    profile as p on p.ID = ${data.profileId2} where r.isDeleted = 'N' and (r.profileId1 = ${data.profileId1} and r.profileId2 = ${data.profileId2} OR r.profileId1 = ${data.profileId2} and r.profileId2 = ${data.profileId1})`;
+    const rooms = await executeQuery(query);
+    return rooms;
+  } catch (error) {
+    return error;
+  }
+};
+
 const endCall = async function (data) {
   try {
-    const query = `update calls_logs set isOnCall = 'N', endDate = NOW() where profileId = ${data?.profileId} and (groupId = ${data?.groupId} or roomId = ${data?.roomId}) and endDate is null`;
+    const query = `update calls_logs set isOnCall = 'N', endDate = NOW() where profileId = ${
+      data?.profileId
+    } and (groupId = ${data?.groupId || null} or roomId = ${
+      data?.roomId || null
+    }) and endDate is null`;
     const callData = await executeQuery(query);
     return callData;
   } catch (error) {
@@ -1068,13 +1143,37 @@ const checkCall = async function (data) {
     return error;
   }
 };
-
 const suspendUser = async function (params) {
   try {
     const query = "UPDATE users SET IsSuspended = ? WHERE Id= ?";
     const values = [params.isSuspended, params.id];
     const user = await executeQuery(query, values);
     return user;
+  } catch (error) {
+    return error;
+  }
+};
+
+
+const sendNotificationEmail = async function (data) {
+  try {
+    const findUser = `select u.Email,p.FirstName,p.LastName,p.Username from users as u left join profile as p on p.UserID = u.Id where p.messageNotificationEmail = 'Y' and p.ID = ?`;
+    const values = [data?.profileId];
+    const userData = await executeQuery(findUser, values);
+    if (userData?.length) {
+      const senderData = await getRoom(data?.roomId);
+      console.log(senderData);
+      const userDetails = {
+        email: userData[0].Email,
+        userName: userData[0].Username,
+        senderUsername: senderData.Username,
+        type: "message",
+        roomId: senderData?.roomId,
+      };
+      await notificationMail(userDetails);
+    } else {
+      return true;
+    }
   } catch (error) {
     return error;
   }

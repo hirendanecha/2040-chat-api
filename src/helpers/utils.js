@@ -173,3 +173,25 @@ exports.registeredUser = async (adminMail, userName) => {
   await email.sendMail(mailObj);
   return;
 };
+
+exports.notificationMail = async (userData) => {
+  let name = userData?.userName || userData.firstName;
+  let msg =
+    userData?.msg ||
+    `You were tagged in ${userData.senderUsername}'s ${userData.type}.`;
+  let redirectUrl = userData.postId
+    ? `${environment.FRONTEND_URL}post/${userData.postId}`
+    : userData?.type === "message"
+    ? `${environment.FRONTEND_URL}profile-chats`
+    : "";
+
+  const mailObj = {
+    email: userData.email,
+    subject: "2040-chat notification",
+    root: "../email-templates/notification.ejs",
+    templateData: { name: name, msg: msg, url: redirectUrl },
+  };
+
+  await email.sendMail(mailObj);
+  return;
+};

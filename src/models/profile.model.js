@@ -23,9 +23,11 @@ var Profile = function (profile) {
   this.ProfilePicName = profile.ProfilePicName;
   this.IsActivated = profile.IsActive;
   this.CreatedOn = new Date();
-  this.callNotificationSound = profile.callNotificationSound;
-  this.messageNotificationSound = profile.messageNotificationSound;
-  this.tagNotificationSound = profile.tagNotificationSound;
+  this.callNotificationSound = profile?.callNotificationSound || 'Y';
+  this.messageNotificationSound = profile?.messageNotificationSound || 'Y';
+  this.tagNotificationSound = profile?.tagNotificationSound || 'Y';
+  this.messageNotificationEmail = profile?.messageNotificationEmail || 'Y';
+  this.postNotificationEmail = profile?.postNotificationEmail || 'Y';
 };
 
 Profile.create = function (profileData, result) {
@@ -75,35 +77,40 @@ Profile.FindById = async function (profileId) {
   //     }
   //   }
   // );
-  const query = `SELECT
-    p.ID as Id,
-    u.Email,
-    p.FirstName,
-    p.LastName,
-    p.UserID,
-    p.MobileNo,
-    p.Gender,
-    p.DateofBirth,
-    p.Address,
-    p.City,
-    p.State,
-    p.Zip,
-    p.Country,
-    p.Business_NP_TypeID,
-    p.CoverPicName,
-    p.IsActivated,
-    p.Username,
-    p.ProfilePicName,
-    p.EmailVerified,
-    p.CreatedOn,
-    p.AccountType,
-    p.MediaApproved,
-    p.County,
-    p.userStatus,
-    p.messageNotificationSound,
-    p.callNotificationSound,
-    p.tagNotificationSound
-  FROM profile as p LEFT JOIN users as u on u.Id = p.UserID  WHERE p.ID=?`;
+  const query = `
+  SELECT 
+            u.Email,
+            u.Username,
+            u.IsActive,
+            u.DateCreation,
+            u.IsAdmin,
+            u.FirstName,
+            u.LastName,
+            u.Address,
+            u.Country,
+            u.City,
+            u.State,
+            u.Zip,
+            u.IsSuspended,
+            u.AccountType,
+            p.ID as profileId,
+            p.County,
+            p.UserID,
+            p.CoverPicName,
+            p.ProfilePicName,
+            p.MobileNo,
+            p.MediaApproved,
+            p.ChannelType,
+            p.DefaultUniqueLink,
+            p.UniqueLink,
+            p.AccountType,
+            p.userStatus,
+            p.messageNotificationSound,
+            p.callNotificationSound,
+            p.tagNotificationSound,
+            p.messageNotificationEmail,
+            p.postNotificationEmail
+        FROM users as u left join profile as p on p.UserID = u.Id AND p.AccountType in ('I','M') WHERE p.ID=?`;
   const values = profileId;
   let profile = await executeQuery(query, values);
   return profile;

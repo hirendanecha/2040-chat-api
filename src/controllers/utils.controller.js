@@ -179,7 +179,7 @@ exports.readFile = async (req, res) => {
 };
 
 exports.uploadVideo = async function (req, res) {
-  console.log("req file ==>", req.file);
+  console.log(req.file);
   const { roomId, groupId } = req.query;
   const url = await s3.uploadFileToWasabi(
     req.file,
