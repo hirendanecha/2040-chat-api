@@ -134,7 +134,7 @@ Profile.update = function (profileId, profileData, result) {
 
 Profile.getUsersByUsername = async function (searchText) {
   if (searchText) {
-    const query = `select p.ID as Id, p.Username,p.ProfilePicName from profile as p left join users as u on u.Id = p.UserID WHERE u.IsAdmin='N' AND u.IsSuspended='N' AND p.Username LIKE ? order by p.Username limit 500`;
+    const query = `select p.ID as Id, p.Username,p.ProfilePicName,p.UserID from profile as p left join users as u on u.Id = p.UserID WHERE u.IsAdmin ='N' AND u.IsSuspended ='N' AND u.IsActive = 'Y' AND p.Username LIKE ? AND p.AccountType in ('I','M') order by p.CreatedOn desc limit 50`;
     const values = [`${searchText}%`];
     const searchData = await executeQuery(query, values);
     return searchData;
@@ -143,15 +143,65 @@ Profile.getUsersByUsername = async function (searchText) {
   }
 };
 
+// Profile.getNotificationById = async function (id, limit, offset) {
+//   if (id) {
+//     const query = `select n.*,p.Username,p.FirstName,p.ProfilePicName from notifications as n left join profile as p on p.ID = n.notificationByProfileId left join groupMembers as g on g.groupId = n.groupId and g.profileId != n.notificationByProfileId where g.profileId = ? OR n.notificationToProfileId =? order by n.createDate desc limit ${limit} offset ${offset}`;
+//     const values = [id, id];
+//     const searchCount = await executeQuery(
+//       `SELECT count(id) as count FROM notifications as n WHERE n.notificationToProfileId = ${id}`
+//     );
+//     const notificationData = await executeQuery(query, values);
+//     // return notificationData;
+//     return {
+//       count: searchCount?.[0]?.count || 0,
+//       data: notificationData,
+//     };
+//   } else {
+//     return { error: "data not found" };
+//   }
+// };
+
 Profile.getNotificationById = async function (id, limit, offset) {
   if (id) {
-    const query = `select n.*,p.Username,p.FirstName,p.ProfilePicName from notifications as n left join profile as p on p.ID = n.notificationByProfileId left join groupMembers as g on g.groupId = n.groupId and g.profileId != n.notificationByProfileId where g.profileId = ? OR n.notificationToProfileId =? order by n.createDate desc limit ${limit} offset ${offset}`;
-    const values = [id, id];
-    const searchCount = await executeQuery(
-      `SELECT count(id) as count FROM notifications as n WHERE n.notificationToProfileId = ${id}`
-    );
+    const query = `
+      SELECT n.*, 
+             p.Username, 
+             p.FirstName, 
+             p.ProfilePicName,
+             g.groupName,
+             g.profileImage
+      FROM notifications AS n
+      LEFT JOIN profile AS p 
+        ON p.ID = n.notificationByProfileId
+      LEFT JOIN chatGroups AS g 
+        ON g.id = n.groupId
+      LEFT JOIN groupMembers AS gm 
+        ON gm.groupId = n.groupId 
+           AND gm.profileId = ?
+      WHERE gm.profileId != n.notificationByProfileId AND gm.profileId = ? 
+         OR n.notificationToProfileId = ?
+      GROUP BY n.id
+      ORDER BY n.createDate DESC
+      LIMIT ? OFFSET ?`;
+
+    const values = [id, id, id, limit, offset];
+
+    // Fetch notification count
+    const searchCountQuery = `
+      SELECT COUNT(DISTINCT n.id) AS count 
+      FROM notifications AS n
+      LEFT JOIN groupMembers AS g 
+        ON g.groupId = n.groupId 
+           AND g.profileId = ?
+      WHERE g.profileId = ? 
+         OR n.notificationToProfileId = ?`;
+    const searchCountValues = [id, id, id];
+
+    const searchCount = await executeQuery(searchCountQuery, searchCountValues);
     const notificationData = await executeQuery(query, values);
-    // return notificationData;
+
+    console.log("notificationData", notificationData);
+
     return {
       count: searchCount?.[0]?.count || 0,
       data: notificationData,
